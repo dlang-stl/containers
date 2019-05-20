@@ -10,12 +10,12 @@ configuration "posix" {
   platforms "posix"
   preGenerateCommands "clang++ -c cpp/string_cpp.cpp -obuild/string_cpp.o"
   preGenerateCommands "clang++ -c cpp/vector_cpp.cpp -obuild/vector_cpp.o"
-  sourceFiles "source/string_test.d" "source/vector_test.d" "build/string_cpp.o" "build/vector_cpp.o"
+  sourceFiles  "build/string_cpp.o" "build/vector_cpp.o"
 }
 
 configuration "windows" {
   platforms "windows"
   preGenerateCommands "clang++ -c cpp/string_cpp.cpp -obuild/string_cpp.obj"
   preGenerateCommands "clang++ -c cpp/vector_cpp.cpp -obuild/vector_cpp.obj"
-  sourceFiles "source/string_test.d" "source/vector_test.d" "build/string_cpp.obj" "build/vector_cpp.obj"
+  sourceFiles  "build/string_cpp.obj" "build/vector_cpp.obj"
 }
