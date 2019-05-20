@@ -164,4 +164,5 @@ test_script:
  - echo %PATH%
  - '%DC% --help'
  - if not exist "tests\build" mkdir tests\build
+ - dub add-local .
  - cd tests && dub test --arch=%Darch% --compiler=%DC% -v -c windows
