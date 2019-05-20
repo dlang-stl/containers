@@ -13,7 +13,6 @@ configuration "default" {
   lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Debug"
 }
 
-configuration "windows-release" {
 configuration "windows-debug" {
   platforms "windows-x86_mscoff" "windows-x86_x64"
   preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015 Win64\" && cmake --build . --config Debug" platforms="windows-x86_64"
