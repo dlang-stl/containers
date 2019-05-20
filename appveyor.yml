@@ -54,8 +54,8 @@ install:
                 $urls = @("http://downloads.dlang.org/pre-releases/2.x/$($latestVersion)/dmd.$($latest).windows.7z",
                           "http://ftp.digitalmars.com/dmd.$($latest).windows.7z");
             }elseif($version -eq "nightly") {
-                $latest = (Invoke-WebRequest "http://nightlies.dlang.org/$($version)/LATEST").toString();
-                $urls = @("http://nightlies.dlang.org/dmd-$($latest)/dmd.master.windows.7z");
+                $latest = (Invoke-WebRequest "http://downloads.dlang.org/nightlies/dmd-nightly/LATEST").toString();
+                $urls = @("http://downloads.dlang.org/nightlies/dmd-$($latest)/dmd.master.windows.7z");
             }else {
                 $urls = @("http://downloads.dlang.org/releases/2.x/$($version)/dmd.$($version).windows.7z",
                           "http://ftp.digitalmars.com/dmd.$($version).windows.7z");
