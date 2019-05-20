@@ -17,7 +17,7 @@ configuration "posix" {
 }
 
 configuration "windows" {
-  platforms "windows-x86_mscoff" "windows-x64"
+  platforms "windows-x86_mscoff" "windows-x86_x64"
   preBuildCommands "cd cpp && cmake . -G \"Visual Studio 14 2015\" && cmake --build ."
   lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Release" platform="windows"
 }
