@@ -11,13 +11,22 @@ configuration "posix" {
   platforms "posix-x86_64" "posix-x86" "osx-x86_64"
   preBuildCommands "cd cpp && cmake . && cmake --build ."
   libs "stdc++" platform="linux"
-  libs "/usr/local/opt/gcc/lib/gcc/8/libstdc++.dylib" platform="osx"
-  libs "stl-containers-tests"
-  dflags "$PACKAGE_DIR/cpp/libstl-containers-tests.a"
+  lflags "/usr/local/opt/gcc/lib/gcc/8/libstdc++.dylib" platform="osx"
+  lflags "/-L$PACKAGE_DIR/cpp" platform="posix"
+  libs "stl-container-test-cpp" platform="posix"
+  dflags "$PACKAGE_DIR/cpp/libstl-container-test-cpp.a"
 }
 
-configuration "windows" {
+configuration "windows-release" {
   platforms "windows-x86_mscoff" "windows-x86_x64"
-  preBuildCommands "cd cpp && cmake . -G \"Visual Studio 14 2015\" && cmake --build ."
-  lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Release" platform="windows"
+  preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015 Win64\" && cmake --build . --config Release" platforms="windows-x86_64"
+  preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015\" && cmake --build . --config Release" platforms="windows-x86_mscoff"
+  lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Release"
+}
+
+configuration "windows-debug" {
+  platforms "windows-x86_mscoff" "windows-x86_x64"
+  preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015 Win64\" && cmake --build . --config Debug" platforms="windows-x86_64"
+  preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015\" && cmake --build . --config Debug" platforms="windows-x86_mscoff"
+  lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Debug"
 }
