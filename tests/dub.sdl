@@ -5,7 +5,7 @@ copyright "Copyright © 2019, Manu"
 license "proprietary"
 dependency "stl-containers" path="../"
 targetType "executable"
-
+sourcePath "source"
 
 configuration "posix" {
   platforms "posix-x86_64" "posix-x86" "osx-x86_64"

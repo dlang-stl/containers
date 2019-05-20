@@ -13,3 +13,7 @@ stl-containers-tests-test-*
 *.o
 *.obj
 *.lst
+cpp/CMakeCache.txt
+cpp/CMakeFiles/
+cpp/Makefile
+cpp/cmake_install.cmake
