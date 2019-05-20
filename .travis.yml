@@ -13,6 +13,7 @@ matrix:
     - os: windows
     - os: linux
       dist: bionic
+    - os: osx
 
 script:
   - cd tests && mkdir -p build && dub test -v

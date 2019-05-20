@@ -6,16 +6,18 @@ license "proprietary"
 dependency "stl-containers" path="../"
 targetType "executable"
 
+
 configuration "posix" {
-  platforms "posix"
-  preGenerateCommands "clang++ -c cpp/string_cpp.cpp -obuild/string_cpp.o"
-  preGenerateCommands "clang++ -c cpp/vector_cpp.cpp -obuild/vector_cpp.o"
-  sourceFiles  "build/string_cpp.o" "build/vector_cpp.o"
+  platforms "posix-x86_64" "posix-x86" "osx-x86_64"
+  preBuildCommands "cd cpp && cmake . && cmake --build ."
+  libs "stdc++" platform="linux"
+  libs "/usr/local/opt/gcc/lib/gcc/8/libstdc++.dylib" platform="osx"
+  libs "stl-containers-tests"
+  dflags "$PACKAGE_DIR/cpp/libstl-containers-tests.a"
 }
 
 configuration "windows" {
-  platforms "windows"
-  preGenerateCommands "clang++ -c cpp/string_cpp.cpp -obuild/string_cpp.obj"
-  preGenerateCommands "clang++ -c cpp/vector_cpp.cpp -obuild/vector_cpp.obj"
-  sourceFiles  "build/string_cpp.obj" "build/vector_cpp.obj"
+  platforms "windows-x86_mscoff" "windows-x64"
+  preBuildCommands "cd cpp && cmake . -G \"Visual Studio 14 2015\" && cmake --build ."
+  lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Release" platform="windows"
 }
