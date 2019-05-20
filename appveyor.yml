@@ -163,5 +163,5 @@ test_script:
  - echo %DMD%
  - echo %PATH%
  - '%DC% --help'
- - mkdir -p tests/build
+ - if not exist "tests\build" mkdir tests\build
  - cd tests && dub test --arch=%Darch% --compiler=%DC%
