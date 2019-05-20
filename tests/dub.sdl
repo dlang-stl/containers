@@ -3,7 +3,7 @@ description "Tests for STL containers"
 authors "Manu"
 copyright "Copyright © 2019, Manu"
 license "proprietary"
-dependency "stl-containers" path="../"
+dependency "stl-containers" version="~master"
 targetType "executable"
 mainSourceFile "source/app.d"
 
