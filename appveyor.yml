@@ -166,6 +166,7 @@ test_script:
  - if not exist "tests\build" mkdir tests\build
  - dub add-local .
  - pushd tests
+ - dub test --arch=%Darch% --compiler=%DC% -v
  - dub test --arch=%Darch% --compiler=%DC% -v -c windows-debug -b debug
  - dub test --arch=%Darch% --compiler=%DC% -v -c windows-release -b release
  - popd
