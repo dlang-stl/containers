@@ -15,5 +15,5 @@ matrix:
       dist: bionic
 
 script:
-  - cd tests && mkdir -p build && dub test
+  - cd tests && mkdir -p build && dub test -v
 
