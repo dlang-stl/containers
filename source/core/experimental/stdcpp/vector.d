@@ -83,12 +83,6 @@ extern(D):
 //    this(const(T)[] arr, ref const(allocator_type) al = defaultAlloc) { this(arr.ptr, arr.ptr + arr.length); }
 
 //    ref vector opAssign(ref const(vector) s);
-//
-//    void clear() nothrow;
-//    void resize(size_type n);
-//    void resize(size_type n, T c);
-//    void reserve(size_type n = 0) @trusted @nogc;
-//    void shrink_to_fit();
 
 //    ///
 //    ref basic_string opOpAssign(string op : "~")(const(T)[] str)            { return append(str); }
@@ -96,6 +90,7 @@ extern(D):
     ref vector opOpAssign(string op : "~")(auto ref T item)           { push_back(forward!item); return this; }
 
     // Modifiers
+    ///
     void push_back(U)(auto ref U element)
     {
         emplace_back(forward!element);
@@ -120,6 +115,16 @@ extern(D):
             for (size_t i = 0; i < count; ++i)
                 emplace(&_Get_data()._Myfirst[i], val);
             _Get_data()._Mylast = _Get_data()._Myfirst + count;
+        }
+        ///
+        this(T[] array)
+        {
+            _Alloc_proxy();
+            _Buy(array.length);
+            scope(failure) _Tidy();
+            for (size_t i = 0; i < array.length; ++i)
+                emplace(&_Get_data()._Myfirst[i], array[i]);
+            _Get_data()._Mylast = _Get_data()._Myfirst + array.length;
         }
 //        ///
 //        this(Range)(Range r)
@@ -184,6 +189,30 @@ extern(D):
             return *_Emplace_reallocate(_Get_data()._Mylast, forward!args);
         }
 
+        ///
+        void reserve(const size_type newCapacity)
+        {
+            if (newCapacity > capacity())
+            {
+//                if (newCapacity > max_size())
+//                    _Xlength();
+                _Reallocate_exactly(newCapacity);
+            }
+        }
+
+        ///
+        void shrink_to_fit()
+        {
+            if (_Has_unused_capacity())
+            {
+                if (empty())
+                    _Tidy();
+                else
+                    _Reallocate_exactly(size());
+            }
+        }
+
+        ///
         void pop_back()
         {
             static if (_ITERATOR_DEBUG_LEVEL == 2)
@@ -191,7 +220,7 @@ extern(D):
                 assert(!empty(), "vector empty before pop");
                 _Orphan_range(_Get_data()._Mylast - 1, _Get_data()._Mylast);
             }
-            destroy!true(_Get_data()._Mylast[-1]);
+            destroy!false(_Get_data()._Mylast[-1]);
             --_Get_data()._Mylast;
         }
 
@@ -239,10 +268,10 @@ extern(D):
             return true;
         }
 
-        void _Destroy(pointer _First, pointer _Last)
+        static void _Destroy(pointer _First, pointer _Last)
         {
-            for (auto i = _Get_data()._Myfirst; i != _Get_data()._Mylast; ++i)
-                destroy!true(*i);
+            for (; _First != _Last; ++_First)
+                destroy!false(*_First);
         }
 
         void _Tidy()
@@ -268,7 +297,7 @@ extern(D):
             return _Get_data()._Myend != _Get_data()._Mylast;
         }
 
-        pointer _Emplace_reallocate(_Valty...)(const pointer _Whereptr, auto ref _Valty _Val)
+        pointer _Emplace_reallocate(_Valty...)(pointer _Whereptr, auto ref _Valty _Val)
         {
             const size_type _Whereoff = _Whereptr - _Get_data()._Myfirst;
             const size_type _Oldsize = size();
@@ -288,11 +317,13 @@ extern(D):
             {
                 emplace(_Newvec + _Whereoff, forward!_Val);
                 _Constructed_first = _Newvec + _Whereoff;
-                for (size_t i = _Whereoff; i > 0; )
+                if (_Whereptr == _Get_data()._Mylast)
+                    _Utransfer!(true, true)(_Get_data()._Myfirst, _Get_data()._Mylast, _Newvec);
+                else
                 {
-                    --i;
-                    _Get_data()._Myfirst[i].moveEmplace(_Newvec[i]);
-                    _Constructed_first = _Newvec + i;
+                    _Utransfer!true(_Get_data()._Myfirst, _Whereptr, _Newvec);
+                    _Constructed_first = _Newvec;
+                    _Utransfer!true(_Whereptr, _Get_data()._Mylast, _Newvec + _Whereoff + 1);
                 }
             }
             catch (Throwable e)
@@ -304,6 +335,76 @@ extern(D):
 
             _Change_array(_Newvec, _Newsize, _Newcapacity);
             return _Get_data()._Myfirst + _Whereoff;
+        }
+
+        void _Resize(_Lambda)(const size_type _Newsize, _Lambda _Udefault_or_fill)
+        {
+            const size_type _Oldsize = size();
+            const size_type _Oldcapacity = capacity();
+
+            if (_Newsize > _Oldcapacity)
+            {
+//                if (_Newsize > max_size())
+//                    _Xlength();
+
+                const size_type _Newcapacity = _Calculate_growth(_Newsize);
+
+                pointer _Newvec = _Getal().allocate(_Newcapacity);
+                pointer _Appended_first = _Newvec + _Oldsize;
+                pointer _Appended_last = _Appended_first;
+
+                try
+                {
+                    _Appended_last = _Udefault_or_fill(_Appended_first, _Newsize - _Oldsize);
+                    _Utransfer!(true, true)(_Get_data()._Myfirst, _Get_data()._Mylast, _Newvec);
+                }
+                catch (Throwable e)
+                {
+                    _Destroy(_Appended_first, _Appended_last);
+                    _Getal().deallocate(_Newvec, _Newcapacity);
+                    throw e;
+                }
+                _Change_array(_Newvec, _Newsize, _Newcapacity);
+            }
+            else if (_Newsize > _Oldsize)
+            {
+                pointer _Oldlast = _Get_data()._Mylast;
+                _Get_data()._Mylast = _Udefault_or_fill(_Oldlast, _Newsize - _Oldsize);
+                _Orphan_range(_Oldlast, _Oldlast);
+            }
+            else if (_Newsize == _Oldsize)
+            {
+                // nothing to do, avoid invalidating iterators
+            }
+            else
+            {
+                pointer _Newlast = _Get_data()._Myfirst + _Newsize;
+                _Orphan_range(_Newlast, _Get_data()._Mylast);
+                _Destroy(_Newlast, _Get_data()._Mylast);
+                _Get_data()._Mylast = _Newlast;
+            }
+        }
+
+        void _Reallocate_exactly(const size_type _Newcapacity)
+        {
+            const size_type _Size = size();
+            pointer _Newvec = _Getal().allocate(_Newcapacity);
+
+            try
+            {
+                for (size_t i = _Size; i > 0; )
+                {
+                    --i;
+                    _Get_data()._Myfirst[i].moveEmplace(_Newvec[i]);
+                }
+            }
+            catch (Throwable e)
+            {
+                _Getal().deallocate(_Newvec, _Newcapacity);
+                throw e;
+            }
+
+            _Change_array(_Newvec, _Size, _Newcapacity);
         }
 
         void _Change_array(pointer _Newvec, const size_type _Newsize, const size_type _Newcapacity) @nogc
@@ -330,6 +431,63 @@ extern(D):
             if (_Geometric < _Newsize)
                 return _Newsize;
             return _Geometric;
+        }
+
+        struct _Uninitialized_backout
+        {
+            this() @disable;
+            this(pointer _Dest)
+            {
+                _First = _Dest;
+                _Last = _Dest;
+            }
+            ~this()
+            {
+                _Destroy(_First, _Last);
+            }
+            void _Emplace_back(Args...)(auto ref Args args)
+            {
+                emplace(_Last, forward!args);
+                ++_Last;
+            }
+            pointer _Release()
+            {
+                _First = _Last;
+                return _Last;
+            }
+        private:
+            pointer _First;
+            pointer _Last;
+        }
+        pointer _Utransfer(bool _move, bool _ifNothrow = false)(pointer _First, pointer _Last, pointer _Dest)
+        {
+            // TODO: if copy/move are trivial, then we can memcpy/memmove
+            auto _Backout = _Uninitialized_backout(_Dest);
+            for (; _First != _Last; ++_First)
+            {
+                static if (_move && (!_ifNothrow || true)) // isNothrow!T (move in D is always nothrow! ...until opPostMove)
+                    _Backout._Emplace_back(move(*_First));
+                else
+                    _Backout._Emplace_back(*_First);
+            }
+            return _Backout._Release();
+        }
+        pointer _Ufill()(pointer _Dest, size_t _Count, auto ref T val)
+        {
+            // TODO: if T.sizeof == 1 and no elaborate constructor, fast-path to memset
+            // TODO: if copy ctor/postblit are nothrow, just range assign
+            auto _Backout = _Uninitialized_backout(_Dest);
+            for (; 0 < _Count; --_Count)
+                _Backout._Emplace_back(val);
+            return _Backout._Release();
+        }
+        pointer _Udefault(pointer _Dest, size_t _Count)
+        {
+            // TODO: if zero init, then fast-path to zeromem
+            auto _Backout = _Uninitialized_backout(_Dest);
+            for (; 0 < _Count; --_Count)
+                _Backout._Emplace_back();
+            return _Backout._Release();
         }
 
         static if (_ITERATOR_DEBUG_LEVEL == 2)

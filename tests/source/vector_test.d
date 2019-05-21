@@ -23,6 +23,15 @@ unittest
     vec.pop_back();
     assert(vec.size == 7 && vec.back == 7);
 
+    vec.resize(8);
+    assert(vec[7] == 0);
+    vec.resize(11, 10);
+    assert(vec[8 .. 11] == [10, 10, 10]);
+    vec.resize(5);
+    assert(vec.length == 5);
+    vec.clear();
+    assert(vec.empty);
+
     // test default construction
     vector!int vec2 = vector!int(Default);
     assert(vec2.size == 0);
