@@ -11,6 +11,7 @@
 
 module core.experimental.stdcpp.xutility;
 
+@nogc:
 
 enum CppStdRevision : uint
 {
@@ -97,50 +98,167 @@ version (CppRuntime_Microsoft)
     enum __CXXLIB__ = __traits(getTargetInfo, "cppRuntimeLibrary");
 
 package:
-    struct _Container_base0 {}
+    enum _LOCK_DEBUG = 3;
 
-    struct _Iterator_base12
+    extern(C++, class) struct _Lockit
     {
-        _Container_proxy *_Myproxy;
-        _Iterator_base12 *_Mynextiter;
+        this(int) nothrow @nogc @safe;
+        ~this() nothrow @nogc @safe;
+
+    private:
+        int _Locktype;
     }
+
+    struct _Container_base0
+    {
+    extern(D):
+        void _Orphan_all() nothrow @nogc @safe {}
+        void _Swap_all(ref _Container_base0) nothrow @nogc @safe {}
+    }
+    struct _Iterator_base0
+    {
+    extern(D):
+        void _Adopt(const(void)*) nothrow @nogc @safe {}
+        const(_Container_base0)* _Getcont() const nothrow @nogc @safe { return null; }
+
+        enum bool _Unwrap_when_unverified = true;
+    }
+
     struct _Container_proxy
     {
         const(_Container_base12)* _Mycont;
         _Iterator_base12* _Myfirstiter;
     }
-    struct _Container_base12 { _Container_proxy* _Myproxy; }
+
+    struct _Container_base12
+    {
+    extern(D):
+        inout(_Iterator_base12*)*_Getpfirst() inout nothrow @nogc @safe
+        {
+            return _Myproxy == null ? null : &_Myproxy._Myfirstiter;
+        }
+        void _Orphan_all() nothrow @nogc @safe
+        {
+            static if (_ITERATOR_DEBUG_LEVEL == 2)
+            {
+                if (_Myproxy != null)
+                {
+                    auto _Lock = _Lockit(_LOCK_DEBUG);
+                    for (_Iterator_base12 **_Pnext = &_Myproxy._Myfirstiter; *_Pnext != null; *_Pnext = (*_Pnext)._Mynextiter)
+                        (*_Pnext)._Myproxy = null;
+                    _Myproxy._Myfirstiter = null;
+                }
+            }
+        }
+//        void _Swap_all(ref _Container_base12) nothrow @nogc;
+
+        _Container_proxy* _Myproxy;
+    }
+
+    struct _Iterator_base12
+    {
+    extern(D):
+        void _Adopt(_Container_base12 *_Parent) nothrow @nogc @safe
+        {
+            if (_Parent == null)
+            {
+                static if (_ITERATOR_DEBUG_LEVEL == 2)
+                {
+                    auto _Lock = _Lockit(_LOCK_DEBUG);
+                    _Orphan_me();
+                }
+            }
+            else
+            {
+                _Container_proxy *_Parent_proxy = _Parent._Myproxy;
+
+                static if (_ITERATOR_DEBUG_LEVEL == 2)
+                {
+                    if (_Myproxy != _Parent_proxy)
+                    {
+                        auto _Lock = _Lockit(_LOCK_DEBUG);
+                        _Orphan_me();
+                        _Mynextiter = _Parent_proxy._Myfirstiter;
+                        _Parent_proxy._Myfirstiter = &this;
+                        _Myproxy = _Parent_proxy;
+                    }
+                }
+                else
+                    _Myproxy = _Parent_proxy;
+            }
+        }
+        void _Clrcont() nothrow @nogc @safe
+        {
+            _Myproxy = null;
+        }
+        const(_Container_base12)* _Getcont() const nothrow @nogc @safe
+        {
+            return _Myproxy == null ? null : _Myproxy._Mycont;
+        }
+        inout(_Iterator_base12*)*_Getpnext() inout nothrow @nogc @safe
+        {
+            return &_Mynextiter;
+        }
+        void _Orphan_me() nothrow @nogc @safe
+        {
+            static if (_ITERATOR_DEBUG_LEVEL == 2)
+            {
+                if (_Myproxy != null)
+                {
+                    _Iterator_base12 **_Pnext = &_Myproxy._Myfirstiter;
+                    while (*_Pnext != null && *_Pnext != &this)
+                        _Pnext = &(*_Pnext)._Mynextiter;
+                    assert(*_Pnext, "ITERATOR LIST CORRUPTED!");
+                    *_Pnext = _Mynextiter;
+                    _Myproxy = null;
+                }
+            }
+        }
+
+        enum bool _Unwrap_when_unverified = _ITERATOR_DEBUG_LEVEL == 0;
+
+        _Container_proxy *_Myproxy;
+        _Iterator_base12 *_Mynextiter;
+    }
 
     static if (_ITERATOR_DEBUG_LEVEL == 0)
+    {
         alias _Container_base = _Container_base0;
+        alias _Iterator_base = _Iterator_base0;
+    }
     else
+    {
         alias _Container_base = _Container_base12;
+        alias _Iterator_base = _Iterator_base12;
+    }
 
     extern (C++, class) struct _Compressed_pair(_Ty1, _Ty2, bool Ty1Empty = is_empty!_Ty1.value)
     {
     pragma (inline, true):
+    extern(D):
+    pure nothrow @nogc:
         enum _HasFirst = !Ty1Empty;
 
-        ref inout(_Ty1) first() inout nothrow @safe @nogc { return _Myval1; }
-        ref inout(_Ty2) second() inout nothrow @safe @nogc { return _Myval2; }
+        ref inout(_Ty1) first() inout @safe { return _Myval1; }
+        ref inout(_Ty2) second() inout @safe { return _Myval2; }
 
         static if (!Ty1Empty)
             _Ty1 _Myval1;
         else
         {
-            @property ref inout(_Ty1) _Myval1() inout nothrow @trusted @nogc { return *_GetBase(); }
-            private inout(_Ty1)* _GetBase() inout { return cast(inout(_Ty1)*)&this; }
+            @property ref inout(_Ty1) _Myval1() inout @trusted { return *_GetBase(); }
+            private inout(_Ty1)* _GetBase() inout @trusted { return cast(inout(_Ty1)*)&this; }
         }
         _Ty2 _Myval2;
     }
 
     // these are all [[noreturn]]
-    void _Xbad() nothrow @trusted @nogc;
-    void _Xinvalid_argument(const(char)* message) nothrow @trusted @nogc;
-    void _Xlength_error(const(char)* message) nothrow @trusted @nogc;
-    void _Xout_of_range(const(char)* message) nothrow @trusted @nogc;
-    void _Xoverflow_error(const(char)* message) nothrow @trusted @nogc;
-    void _Xruntime_error(const(char)* message) nothrow @trusted @nogc;
+    void _Xbad() nothrow;
+    void _Xinvalid_argument(const(char)* message) nothrow;
+    void _Xlength_error(const(char)* message) nothrow;
+    void _Xout_of_range(const(char)* message) nothrow;
+    void _Xoverflow_error(const(char)* message) nothrow;
+    void _Xruntime_error(const(char)* message) nothrow;
 }
 else version (CppRuntime_Clang)
 {
@@ -149,6 +267,7 @@ else version (CppRuntime_Clang)
     extern (C++, class) struct __compressed_pair(_T1, _T2)
     {
     pragma (inline, true):
+    extern(D):
         enum Ty1Empty = is_empty!_T1.value;
         enum Ty2Empty = is_empty!_T2.value;
 

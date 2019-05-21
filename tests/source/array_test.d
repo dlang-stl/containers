@@ -1,4 +1,4 @@
-import core.stdcpp.array;
+import core.experimental.stdcpp.array;
 
 unittest
 {

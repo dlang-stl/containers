@@ -33,6 +33,7 @@ extern(C++, "std"):
 extern(C++, class) struct vector(T, Alloc = allocator!T)
 {
     import core.lifetime;
+
     static assert(!is(T == bool), "vector!bool not supported!");
 extern(D):
 
@@ -61,9 +62,9 @@ extern(D):
     alias opDollar = length;
 
     ///
-    ref inout(T) front() inout nothrow @safe                                { return this[0]; }
+    ref inout(T) front() inout pure nothrow @safe @nogc                     { return this[0]; }
     ///
-    ref inout(T) back() inout nothrow @safe                                 { return this[$-1]; }
+    ref inout(T) back() inout pure nothrow @safe @nogc                      { return this[$-1]; }
 
 
     // WIP...
@@ -107,7 +108,7 @@ extern(D):
         //----------------------------------------------------------------------------------
 
         ///
-        this(DefaultConstruct)                                              { _Alloc_proxy(); }
+        this(DefaultConstruct) @nogc                                        { _Alloc_proxy(); }
         ///
         this(size_t count)                                                  { T def; this(count, def); }
         ///
@@ -152,23 +153,23 @@ extern(D):
         ~this()                                                             { _Tidy(); }
 
         ///
-        ref inout(Alloc) get_allocator() inout                              { return _Getal(); }
+        ref inout(Alloc) get_allocator() inout pure nothrow @safe @nogc     { return _Getal(); }
 
         ///
-        size_type max_size() const nothrow @safe                            { return ((size_t.max / T.sizeof) - 1) / 2; } // HACK: clone the windows version precisely?
+        size_type max_size() const pure nothrow @safe @nogc                 { return ((size_t.max / T.sizeof) - 1) / 2; } // HACK: clone the windows version precisely?
 
         ///
-        size_type size() const nothrow @safe @nogc                          { return _Get_data()._Mylast - _Get_data()._Myfirst; }
+        size_type size() const pure nothrow @safe @nogc                     { return _Get_data()._Mylast - _Get_data()._Myfirst; }
         ///
-        size_type capacity() const nothrow @safe @nogc                      { return _Get_data()._Myend - _Get_data()._Myfirst; }
+        size_type capacity() const pure nothrow @safe @nogc                 { return _Get_data()._Myend - _Get_data()._Myfirst; }
         ///
-        bool empty() const nothrow @safe @nogc                              { return _Get_data()._Myfirst == _Get_data()._Mylast; }
+        bool empty() const pure nothrow @safe @nogc                         { return _Get_data()._Myfirst == _Get_data()._Mylast; }
         ///
-        inout(T)* data() inout nothrow @safe @nogc                          { return _Get_data()._Myfirst; }
+        inout(T)* data() inout pure nothrow @safe @nogc                     { return _Get_data()._Myfirst; }
         ///
-        inout(T)[] as_array() inout @trusted @nogc                          { return _Get_data()._Myfirst[0 .. size()]; }
+        inout(T)[] as_array() inout pure nothrow @trusted @nogc             { return _Get_data()._Myfirst[0 .. size()]; }
         ///
-        ref inout(T) at(size_type i) inout @trusted @nogc                   { return _Get_data()._Myfirst[0 .. size()][i]; }
+        ref inout(T) at(size_type i) inout pure nothrow @trusted @nogc      { return _Get_data()._Myfirst[0 .. size()][i]; }
 
         ///
         ref T emplace_back(Args...)(auto ref Args args)
@@ -176,14 +177,15 @@ extern(D):
             if (_Has_unused_capacity())
             {
                 emplace(_Get_data()._Mylast, forward!args);
-                _Orphan_range(_Get_data()._Mylast, _Get_data()._Mylast);
+                static if (_ITERATOR_DEBUG_LEVEL == 2)
+                    _Orphan_range(_Get_data()._Mylast, _Get_data()._Mylast);
                 return *_Get_data()._Mylast++;
             }
             return *_Emplace_reallocate(_Get_data()._Mylast, forward!args);
         }
 
         void pop_back()
-		{
+        {
             static if (_ITERATOR_DEBUG_LEVEL == 2)
             {
                 assert(!empty(), "vector empty before pop");
@@ -191,7 +193,7 @@ extern(D):
             }
             destroy!true(_Get_data()._Mylast[-1]);
             --_Get_data()._Mylast;
-		}
+        }
 
     private:
         import core.experimental.stdcpp.xutility : MSVCLinkDirectives;
@@ -201,24 +203,24 @@ extern(D):
 
         pragma(inline, true)
         {
-            ref inout(_Base.Alloc) _Getal() inout nothrow @safe @nogc       { return _Base._Mypair._Myval1; }
-            ref inout(_Base.ValTy) _Get_data() inout nothrow @safe @nogc    { return _Base._Mypair._Myval2; }
+            ref inout(_Base.Alloc) _Getal() inout pure nothrow @safe @nogc       { return _Base._Mypair._Myval1; }
+            ref inout(_Base.ValTy) _Get_data() inout pure nothrow @safe @nogc    { return _Base._Mypair._Myval2; }
         }
 
-        void _Alloc_proxy() nothrow
+        void _Alloc_proxy() @nogc
         {
             static if (_ITERATOR_DEBUG_LEVEL > 0)
                 _Base._Alloc_proxy();
         }
 
-        void _AssignAllocator(ref const(allocator_type) al) nothrow
+        void _AssignAllocator(ref const(allocator_type) al) nothrow @nogc
         {
             static if (_Base._Mypair._HasFirst)
                 _Getal() = al;
         }
 
         bool _Buy(size_type _Newcapacity) @trusted @nogc
-		{
+        {
             _Get_data()._Myfirst = null;
             _Get_data()._Mylast = null;
             _Get_data()._Myend = null;
@@ -235,7 +237,7 @@ extern(D):
             _Get_data()._Myend = _Get_data()._Myfirst + _Newcapacity;
 
             return true;
-		}
+        }
 
         void _Destroy(pointer _First, pointer _Last)
         {
@@ -247,27 +249,27 @@ extern(D):
         {
             _Base._Orphan_all();
             if (_Get_data()._Myfirst)
-			{
+            {
                 _Destroy(_Get_data()._Myfirst, _Get_data()._Mylast);
                 _Getal().deallocate(_Get_data()._Myfirst, capacity());
                 _Get_data()._Myfirst = null;
                 _Get_data()._Mylast = null;
                 _Get_data()._Myend = null;
-			}
+            }
         }
 
-        size_type _Unused_capacity() const pure nothrow @trusted @nogc
-		{
+        size_type _Unused_capacity() const pure nothrow @safe @nogc
+        {
             return _Get_data()._Myend - _Get_data()._Mylast;
-		}
+        }
 
-        bool _Has_unused_capacity() const pure nothrow @trusted @nogc
-		{
+        bool _Has_unused_capacity() const pure nothrow @safe @nogc
+        {
             return _Get_data()._Myend != _Get_data()._Mylast;
-		}
+        }
 
         pointer _Emplace_reallocate(_Valty...)(const pointer _Whereptr, auto ref _Valty _Val)
-		{
+        {
             const size_type _Whereoff = _Whereptr - _Get_data()._Myfirst;
             const size_type _Oldsize = size();
 
@@ -302,25 +304,25 @@ extern(D):
 
             _Change_array(_Newvec, _Newsize, _Newcapacity);
             return _Get_data()._Myfirst + _Whereoff;
-		}
+        }
 
-        void _Change_array(pointer _Newvec, const size_type _Newsize, const size_type _Newcapacity)
-		{
+        void _Change_array(pointer _Newvec, const size_type _Newsize, const size_type _Newcapacity) @nogc
+        {
             _Base._Orphan_all();
 
             if (_Get_data()._Myfirst != null)
-			{
+            {
                 _Destroy(_Get_data()._Myfirst, _Get_data()._Mylast);
                 _Getal().deallocate(_Get_data()._Myfirst, capacity());
-			}
+            }
 
             _Get_data()._Myfirst = _Newvec;
             _Get_data()._Mylast = _Newvec + _Newsize;
             _Get_data()._Myend = _Newvec + _Newcapacity;
-		}
+        }
 
         size_type _Calculate_growth(const size_type _Newsize) const pure nothrow @nogc @safe
-		{
+        {
             const size_type _Oldcapacity = capacity();
             if (_Oldcapacity > max_size() - _Oldcapacity/2)
                 return _Newsize;
@@ -328,50 +330,47 @@ extern(D):
             if (_Geometric < _Newsize)
                 return _Newsize;
             return _Geometric;
-		}
+        }
 
         static if (_ITERATOR_DEBUG_LEVEL == 2)
         {
-            void _Orphan_range(pointer _First, pointer _Last) const
-		    {
-//                assert(false, "TODO");
-//                _Lockit _Lock(_LOCK_DEBUG);
-//
-//                const_iterator ** _Pnext = reinterpret_cast<const_iterator **>(this->_Getpfirst());
-//
-//                if (_Pnext)
-//			    {
-//                    while (*_Pnext)
-//				    {
-//                        if ((*_Pnext)->_Ptr < _First || _Last < (*_Pnext)->_Ptr)
-//					    {	// skip the iterator
-//                            _Pnext = reinterpret_cast<const_iterator **>((*_Pnext)->_Getpnext());
-//					    }
-//                        else
-//					    {	// orphan the iterator
-//                            (*_Pnext)->_Clrcont();
-//                            *_Pnext = *reinterpret_cast<const_iterator **>((*_Pnext)->_Getpnext());
-//					    }
-//				    }
-//			    }
-		    }
-        }
-        else
-        {
-            void _Orphan_range(pointer, pointer) const {}
+            void _Orphan_range(pointer _First, pointer _Last) const @nogc
+            {
+                import core.experimental.stdcpp.xutility : _Lockit, _LOCK_DEBUG;
+
+                alias const_iterator = _Base.const_iterator;
+                auto _Lock = _Lockit(_LOCK_DEBUG);
+
+                const_iterator** _Pnext = cast(const_iterator**)_Get_data()._Base._Getpfirst();
+                if (!_Pnext)
+                    return;
+
+                while (*_Pnext)
+                {
+                    if ((*_Pnext)._Ptr < _First || _Last < (*_Pnext)._Ptr)
+                    {
+                        _Pnext = cast(const_iterator**)(*_Pnext)._Base._Getpnext();
+                    }
+                    else
+                    {
+                        (*_Pnext)._Base._Clrcont();
+                        *_Pnext = *cast(const_iterator**)(*_Pnext)._Base._Getpnext();
+                    }
+                }
+            }
         }
 
         _Vector_alloc!(_Vec_base_types!(T, Alloc)) _Base;
     }
     else version (None)
     {
-        size_type size() const nothrow @safe @nogc                          { return 0; }
-        size_type capacity() const nothrow @safe @nogc                      { return 0; }
-        bool empty() const nothrow @safe @nogc                              { return true; }
+        size_type size() const pure nothrow @safe @nogc                     { return 0; }
+        size_type capacity() const pure nothrow @safe @nogc                 { return 0; }
+        bool empty() const pure nothrow @safe @nogc                         { return true; }
 
-        inout(T)* data() inout nothrow @safe @nogc                          { return null; }
-        inout(T)[] as_array() inout nothrow @trusted @nogc                  { return null; }
-        ref inout(T) at(size_type i) inout @trusted @nogc                   { data()[0]; }
+        inout(T)* data() inout pure nothrow @safe @nogc                     { return null; }
+        inout(T)[] as_array() inout pure nothrow @trusted @nogc             { return null; }
+        ref inout(T) at(size_type i) inout pure nothrow @trusted @nogc      { data()[0]; }
     }
     else
     {
@@ -399,18 +398,49 @@ version (CppRuntime_Microsoft)
     extern (C++, class) struct _Vector_alloc(_Alloc_types)
     {
         import core.experimental.stdcpp.xutility : _Compressed_pair;
-    nothrow @safe @nogc:
+    extern(D):
+    @nogc:
 
         alias Ty = _Alloc_types.Ty;
         alias Alloc = _Alloc_types.Alloc;
         alias ValTy = _Vector_val!Ty;
 
-        void _Orphan_all();
-
-        static if (_ITERATOR_DEBUG_LEVEL > 0)
+        void _Orphan_all() nothrow @safe
         {
-            void _Alloc_proxy();
-            void _Free_proxy();
+            static if (is(typeof(ValTy._Base)))
+                _Mypair._Myval2._Base._Orphan_all();
+        }
+
+        static if (_ITERATOR_DEBUG_LEVEL != 0)
+        {
+            import core.experimental.stdcpp.xutility : _Container_proxy;
+
+            alias const_iterator = _Vector_const_iterator!(ValTy);
+
+            ~this()
+            {
+                _Free_proxy();
+            }
+
+            void _Alloc_proxy() @trusted
+            {
+                import core.lifetime : emplace;
+
+                alias _Alproxy = Alloc.rebind!_Container_proxy;
+                _Alproxy _Proxy_allocator = _Alproxy(_Mypair._Myval1);
+                _Mypair._Myval2._Base._Myproxy = _Proxy_allocator.allocate(1);
+                emplace(_Mypair._Myval2._Base._Myproxy);
+                _Mypair._Myval2._Base._Myproxy._Mycont = &_Mypair._Myval2._Base;
+            }
+            void _Free_proxy()
+            {
+                alias _Alproxy = Alloc.rebind!_Container_proxy;
+                _Alproxy _Proxy_allocator = _Alproxy(_Mypair._Myval1);
+                _Orphan_all();
+                destroy!false(_Mypair._Myval2._Base._Myproxy);
+                _Proxy_allocator.deallocate(_Mypair._Myval2._Base._Myproxy, 1);
+                _Mypair._Myval2._Base._Myproxy = null;
+            }
         }
 
         _Compressed_pair!(Alloc, ValTy) _Mypair;
@@ -421,13 +451,26 @@ version (CppRuntime_Microsoft)
         import core.experimental.stdcpp.xutility : _Container_base;
         import core.experimental.stdcpp.type_traits : is_empty;
 
-        static if (!is_empty!_Container_base.value)
-        {
-            _Container_base _Base;
-        }
+        alias pointer = T*;
 
-        T* _Myfirst;   // pointer to beginning of array
-        T* _Mylast;    // pointer to current end of sequence
-        T* _Myend;     // pointer to end of array
+        static if (!is_empty!_Container_base.value)
+            _Container_base _Base;
+
+        pointer _Myfirst;   // pointer to beginning of array
+        pointer _Mylast;    // pointer to current end of sequence
+        pointer _Myend;     // pointer to end of array
+    }
+
+    static if (_ITERATOR_DEBUG_LEVEL > 0)
+    {
+        extern (C++, class) struct _Vector_const_iterator(_Myvec)
+        {
+            import core.experimental.stdcpp.xutility : _Iterator_base;
+            import core.experimental.stdcpp.type_traits : is_empty;
+
+            static if (!is_empty!_Iterator_base.value)
+                _Iterator_base _Base;
+            _Myvec.pointer _Ptr;
+        }
     }
 }

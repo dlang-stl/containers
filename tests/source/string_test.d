@@ -1,8 +1,9 @@
-module test.stdcpp.string;
+module test.experimental.stdcpp.string;
 
 import core.experimental.stdcpp.string;
 
 alias std_string = basic_string!char;
+alias std_wstring = basic_string!wchar;
 
 unittest
 {
@@ -22,6 +23,14 @@ unittest
         assert(str2.length == 0);
         assert(str2.empty == true);
         assert(str2[] == []);
+
+        // test local instantiations...
+        // there's no basic_string<char16_t> instantiation in C++
+        std_wstring str3 = std_wstring("Hello"w);
+
+        assert(str3.size == 5);
+        assert(str3.length == 5);
+        assert(str3.empty == false);
     }
     else
     {

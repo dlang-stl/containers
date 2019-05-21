@@ -2,6 +2,9 @@ import core.experimental.stdcpp.vector;
 
 unittest
 {
+    import std.math : isNaN;
+
+    // test vector a bit
     vector!int vec = vector!int(5);
     vec[] = [1, 2, 3, 4, 5];
 
@@ -20,11 +23,18 @@ unittest
     vec.pop_back();
     assert(vec.size == 7 && vec.back == 7);
 
+    // test default construction
     vector!int vec2 = vector!int(Default);
     assert(vec2.size == 0);
     assert(vec2.length == 0);
     assert(vec2.empty == true);
     assert(vec2[] == []);
+
+    // test local instantiations...
+    // there's no vector<float> instantiation in C++
+    vector!float vec3 = vector!float(1);
+    vec3.push_back(1.0);
+    assert(isNaN(vec3[0]) && vec3[1] == 1.0);
 }
 
 

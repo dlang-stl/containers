@@ -1,5 +1,5 @@
-import core.stdcpp.new_;
-import core.stdcpp.xutility : __cpp_aligned_new;
+import core.experimental.stdcpp.new_;
+import core.experimental.stdcpp.xutility : __cpp_aligned_new;
 
 extern(C++) struct MyStruct
 {
