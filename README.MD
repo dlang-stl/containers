@@ -11,7 +11,7 @@ https://github.com/dlang/druntime/pull/2310
 
 STATUS:
 
-* almost builds on Windows - it just needs to know where stdc++ can be found
+* almost builds on Windows - it just needs to fix the windows sdk reference
 
 TODO:
 
