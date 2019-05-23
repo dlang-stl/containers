@@ -107,7 +107,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <DCompiler>DMD</DCompiler>
+    <DCompiler>LDC</DCompiler>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release LDC|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -115,14 +115,14 @@
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DCompiler>DMD</DCompiler>
+    <DCompiler>LDC</DCompiler>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug LDC|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <DCompiler>DMD</DCompiler>
+    <DCompiler>LDC</DCompiler>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release LDC|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -130,7 +130,7 @@
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DCompiler>DMD</DCompiler>
+    <DCompiler>LDC</DCompiler>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

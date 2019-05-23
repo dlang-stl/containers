@@ -11,6 +11,7 @@
 
 module core.experimental.stdcpp.xutility;
 
+
 @nogc:
 
 enum CppStdRevision : uint
@@ -27,8 +28,6 @@ enum __cplusplus = __traits(getTargetInfo, "cppStd");
 enum __cpp_sized_deallocation = __cplusplus >= CppStdRevision.cpp14 ? 201309 : 0;
 enum __cpp_aligned_new = __cplusplus >= CppStdRevision.cpp17 ? 201606 : 0;
 
-
-extern(C++, "std"):
 
 version (CppRuntime_Microsoft)
 {
@@ -67,6 +66,10 @@ version (CppRuntime_Microsoft)
             pragma(linkerDirective, "/FAILIFMISMATCH:_ITERATOR_DEBUG_LEVEL=" ~ ('0' + _ITERATOR_DEBUG_LEVEL));
     }
 
+    // HACK: should we guess _DEBUG for `debug` builds?
+    version (NDEBUG) {}
+    else debug version = _DEBUG;
+
     // By specific user request
     version (_ITERATOR_DEBUG_LEVEL_0)
         enum _ITERATOR_DEBUG_LEVEL = 0;
@@ -87,7 +90,7 @@ version (CppRuntime_Microsoft)
                 pragma(msg, "Unrecognised C++ runtime library '" ~ __CXXLIB__ ~ "'");
 
             // No runtime specified; as a best-guess, -release will produce code that matches the MSVC release CRT
-            debug
+            version (_DEBUG)
                 enum _ITERATOR_DEBUG_LEVEL = 2;
             else
                 enum _ITERATOR_DEBUG_LEVEL = 0;
@@ -97,6 +100,7 @@ version (CppRuntime_Microsoft)
     // convenient alias for the C++ std library name
     enum __CXXLIB__ = __traits(getTargetInfo, "cppRuntimeLibrary");
 
+extern(C++, "std"):
 package:
     enum _LOCK_DEBUG = 3;
 
@@ -263,6 +267,8 @@ package:
 else version (CppRuntime_Clang)
 {
     import core.experimental.stdcpp.type_traits : is_empty;
+
+extern(C++, "std"):
 
     extern (C++, class) struct __compressed_pair(_T1, _T2)
     {

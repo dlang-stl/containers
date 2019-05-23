@@ -188,6 +188,10 @@ version (CppRuntime_Microsoft)
     version (X86_64)
         version = INTEL_ARCH;
 
+    // HACK: should we guess _DEBUG for `debug` builds?
+    version (NDEBUG) {}
+    else debug version = _DEBUG;
+
     enum _New_alignof(T) = T.alignof > __STDCPP_DEFAULT_NEW_ALIGNMENT__ ? T.alignof : __STDCPP_DEFAULT_NEW_ALIGNMENT__;
 
     version (INTEL_ARCH)
@@ -200,7 +204,7 @@ version (CppRuntime_Microsoft)
         static assert(size_t.sizeof == (void*).sizeof, "uintptr_t is not the same size as size_t");
 
         // NOTE: this must track `_DEBUG` macro used in C++...
-        debug
+        version (_DEBUG)
             enum size_t _Non_user_size = 2 * (void*).sizeof + _Big_allocation_alignment - 1;
         else
             enum size_t _Non_user_size = (void*).sizeof + _Big_allocation_alignment - 1;
@@ -222,10 +226,8 @@ version (CppRuntime_Microsoft)
             void* _Ptr = cast(void*)((_Ptr_container + _Non_user_size) & ~(_Big_allocation_alignment - 1));
             (cast(size_t*)_Ptr)[-1] = _Ptr_container;
 
-            debug
-            {
+            version (_DEBUG)
                 (cast(size_t*)_Ptr)[-2] = _Big_allocation_sentinel;
-            }
             return (_Ptr);
         }
 
@@ -242,7 +244,7 @@ version (CppRuntime_Microsoft)
 
             // Extra paranoia on aligned allocation/deallocation; ensure _Ptr_container is
             // in range [_Min_back_shift, _Non_user_size]
-            debug
+            version (_DEBUG)
                 enum size_t _Min_back_shift = 2 * (void*).sizeof;
             else
                 enum size_t _Min_back_shift = (void*).sizeof;
