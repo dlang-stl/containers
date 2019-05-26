@@ -39,6 +39,7 @@
     <DCompile Include="source\core\experimental\stdcpp\array.d" />
     <DCompile Include="source\core\experimental\stdcpp\exception.d" />
     <DCompile Include="source\core\experimental\stdcpp\new_.d" />
+    <DCompile Include="source\core\experimental\stdcpp\optional.d" />
     <DCompile Include="source\core\experimental\stdcpp\string.d" />
     <DCompile Include="source\core\experimental\stdcpp\string_view.d" />
     <DCompile Include="source\core\experimental\stdcpp\typeinfo.d" />
@@ -48,6 +49,7 @@
     <DCompile Include="tests\source\allocator_test.d" />
     <DCompile Include="tests\source\array_test.d" />
     <DCompile Include="tests\source\new_test.d" />
+    <DCompile Include="tests\source\optional_test.d" />
     <DCompile Include="tests\source\string_test.d" />
     <DCompile Include="tests\source\string_view_test.d" />
     <DCompile Include="tests\source\vector_test.d" />
@@ -56,6 +58,7 @@
     <ClCompile Include="tests\cpp\allocator_cpp.cpp" />
     <ClCompile Include="tests\cpp\array_cpp.cpp" />
     <ClCompile Include="tests\cpp\new_cpp.cpp" />
+    <ClCompile Include="tests\cpp\optional_cpp.cpp" />
     <ClCompile Include="tests\cpp\string_cpp.cpp" />
     <ClCompile Include="tests\cpp\string_view_cpp.cpp" />
     <ClCompile Include="tests\cpp\vector_cpp.cpp" />

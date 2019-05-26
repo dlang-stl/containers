@@ -72,6 +72,12 @@
     <DCompile Include="tests\source\string_view_test.d">
       <Filter>tests\source</Filter>
     </DCompile>
+    <DCompile Include="source\core\experimental\stdcpp\optional.d">
+      <Filter>source\core\experimental\stdcpp</Filter>
+    </DCompile>
+    <DCompile Include="tests\source\optional_test.d">
+      <Filter>tests\source</Filter>
+    </DCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests\cpp\string_cpp.cpp">
@@ -90,6 +96,9 @@
       <Filter>tests\cpp</Filter>
     </ClCompile>
     <ClCompile Include="tests\cpp\string_view_cpp.cpp">
+      <Filter>tests\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\cpp\optional_cpp.cpp">
       <Filter>tests\cpp</Filter>
     </ClCompile>
   </ItemGroup>
