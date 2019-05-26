@@ -11,6 +11,8 @@
 
 module core.experimental.stdcpp.optional;
 
+import core.experimental.stdcpp.exception : exception;
+
 version (CppRuntime_DigitalMars)
 {
     pragma(msg, "std::optional not supported by DMC");
@@ -24,6 +26,19 @@ else
 {
     private enum StdNamespace = "std";
 }
+
+
+extern(C++, "std")
+{
+    ///
+    class bad_optional_access : exception
+    {
+    @nogc:
+        ///
+        this(const(char)* message = "bad exception") nothrow { super(message); }
+    }
+}
+
 
 extern(C++, (StdNamespace)):
 
@@ -52,6 +67,9 @@ extern(C++, class) struct optional(T)
 //	static assert(is_reference_v<_Ty> || is_object_v<_Ty>, "T in optional!T must be an object type (N4659 23.6.3 [optional.optional]/3).");
 //	static assert(is_destructible_v<_Ty> && !is_array_v<_Ty>, "T in optional!T must satisfy the requirements of Destructible (N4659 23.6.3 [optional.optional]/3).");
 
+    import core.internal.traits : AliasSeq, Unqual, hasElaborateDestructor, hasElaborateCopyConstructor, hasElaborateDestructor;
+    import core.lifetime : forward, moveEmplace, core_emplace = emplace;
+
 extern(D):
 pragma(inline, true):
 
@@ -68,15 +86,6 @@ pragma(inline, true):
         _engaged = true;
     }
 
-    static if (hasElaborateDestructor!T)
-    {
-        ~this()
-        {
-            if (_engaged)
-                destroy!false(_value);
-        }
-    }
-
     static if (hasElaborateCopyConstructor!T)
     {
         this(ref return scope inout(optional) rhs) inout
@@ -84,6 +93,15 @@ pragma(inline, true):
             _engaged = rhs._engaged;
             if (rhs._engaged)
                 core_emplace(cast(T*)&_value, rhs._value);
+        }
+    }
+
+    static if (hasElaborateDestructor!T)
+    {
+        ~this()
+        {
+            if (_engaged)
+                destroy!false(_value);
         }
     }
 
@@ -144,21 +162,22 @@ pragma(inline, true):
     }
 
     // TODO: return by-val (move _value) if `this` is an rvalue... (auto ref return?)
-    ref T value()
+    ref inout(T) value() inout return pure @trusted // @nogc //(DIP1008)
+        in (_engaged == true)
     {
+        // TODO: support C++ exceptions?
+//        if (!_engaged)
+//            throw new bad_optional_access();
         return _value;
     }
 
     // TODO: return by-val (move _value) if `this` is an rvalue... (auto ref return?)
-    ref T value_or()(auto ref T or)
+    ref inout(T) value_or(scope return ref inout(T) or) inout return pure nothrow @nogc @trusted
     {
-        return _engaged ? _value : forward!or;
+        return _engaged ? _value : or;
     }
 
 private:
-    import core.internal.traits : AliasSeq, Unqual, hasElaborateDestructor, hasElaborateCopyConstructor, hasElaborateDestructor;
-    import core.lifetime : forward, moveEmplace, core_emplace = emplace;
-
     // amazingly, MSVC, Clang and GCC all share the same struct!
     union
     {
