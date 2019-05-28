@@ -11,7 +11,7 @@ https://github.com/dlang/druntime/pull/2310
 
 STATUS:
 
-* almost builds on Windows - it just needs to fix the windows sdk reference.  however Manu says tests pass on Windows for vector, string, optional
+* almost builds on Windows - just need to install Visual D on CI.  however Manu says tests pass on Windows for vector, string, optional
 
 TODO:
 
