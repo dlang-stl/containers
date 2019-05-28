@@ -19,5 +19,6 @@ TODO:
 1. implementation for various containers on Linux not yet done/finished - gcc held back by internal struct pointer (awaiting opMove hook I think) and for clang the work just needs to be done.
 2. osx, freebsd impl and build not done at all I think
 3. implement unordered map
-5. add builds for osx/bsd/android
+4. add builds for osx/bsd/android
+5. std::optional only works for POD
 
