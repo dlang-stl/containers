@@ -11,12 +11,13 @@ https://github.com/dlang/druntime/pull/2310
 
 STATUS:
 
-* almost builds on Windows - it just needs to fix the windows sdk reference
+* almost builds on Windows - it just needs to fix the windows sdk reference.  however Manu says tests pass on Windows for vector, string, optional
 
 TODO:
 
-1. implementation for various containers on Linux not yet done/finished
+0. fix Windows build and CI
+1. implementation for various containers on Linux not yet done/finished - gcc held back by internal struct pointer (awaiting opMove hook I think) and for clang the work just needs to be done.
 2. osx, freebsd impl and build not done at all I think
-3. implement unordered map, std::optional
+3. implement unordered map
 5. add builds for osx/bsd/android
 
