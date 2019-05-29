@@ -11,10 +11,11 @@
 
 module core.experimental.stdcpp.typeinfo;
 
+import core.experimental.stdcpp.exception;
+
+
 version (CppRuntime_DigitalMars)
 {
-    import core.experimental.stdcpp.exception;
-
     extern (C++, "std"):
 
     class type_info
@@ -97,8 +98,6 @@ else version (CppRuntime_Microsoft)
 }
 else version (CppRuntime_Gcc)
 {
-    import core.experimental.stdcpp.exception;
-
     extern (C++, "__cxxabiv1")
     {
         class __class_type_info;
@@ -141,6 +140,145 @@ else version (CppRuntime_Gcc)
         this();
         //~this();
         override const(char)* what() const;
+    }
+}
+else version (CppRuntime_Clang)
+{
+    extern (C++, "std"):
+
+    static assert(__traits(classInstanceSize, type_info)  == 16);
+    static assert(__traits(classInstanceSize, bad_cast)   ==  8);
+    static assert(__traits(classInstanceSize, bad_typeid) ==  8);
+
+    class type_info
+    {
+        ~this() {}
+
+    final:
+        this(const ref type_info);
+        // identity assignment operator overload is illegal
+        ref type_info opAssign_(const ref type_info);
+
+        version(LIBCPP_HAS_NONUNIQUE_TYPEINFO)
+        {
+            pragma(inline, true) extern(D)
+            int __compare_nonunique_names(const ref type_info __arg) const nothrow
+            {
+                return __builtin_strcmp(name(), __arg.name());
+            }
+        }
+
+        version (Windows)
+        {
+            struct {
+                char*   __undecorated_name;
+                char[1] __decorated_name;
+            }
+
+            int __compare(const ref type_info __rhs) const nothrow;
+        }
+        else version (LIBCPP_HAS_NONUNIQUE_TYPEINFO)
+        {
+            // A const char* with the non-unique RTTI bit possibly set.
+            protected uintptr_t __type_name;
+            extern(D) this(const(char*) __n) { this.__type_name = cast(uintptr_t) __n; }
+        }
+        else
+        {
+            protected const(char*) __type_name;
+            extern(D) this(const(char*) __n) { this.__type_name = __n; }
+        }
+
+        version (Windows)
+        {
+            const(char)* name() const nothrow;
+
+            pragma(inline, true) extern(D)
+            bool before(const ref type_info __arg) const nothrow
+            {
+                return __compare(__arg) < 0;
+            }
+
+            size_t hash_code() const nothrow;
+
+            bool opEquals(const ref type_info __arg) const nothrow
+            { return __compare(__arg) == 0; }
+        }
+        else version(LIBCPP_HAS_NONUNIQUE_TYPEINFO)
+        {
+            pragma(inline, true) extern(D)
+            const(char*) name() const nothrow
+            {
+                return cast(const char*)(
+                    __type_name & ~_LIBCPP_NONUNIQUE_RTTI_BIT);
+            }
+
+            pragma(inline, true) extern(D)
+            bool before(const ref type_info __arg) const nothrow
+            {
+                if (!((__type_name & __arg.__type_name) & _LIBCPP_NONUNIQUE_RTTI_BIT))
+                    return __type_name < __arg.__type_name;
+                return __compare_nonunique_names(__arg) < 0;
+            }
+
+            pragma(inline, true) extern(D)
+            size_t hash_code() const nothrow
+            {
+                if (!(__type_name & _LIBCPP_NONUNIQUE_RTTI_BIT))
+                    return __type_name;
+
+                const char* ptr = name();
+                size_t hash = 5381;
+                for (char c = *ptr; c != '\0'; ++ptr)
+                    __hash = (__hash * 33) ^ __c;
+                return __hash;
+            }
+
+            pragma(inline, true) extern(D)
+            bool opEquals(const ref type_info __arg) const nothrow
+            {
+                if (__type_name == __arg.__type_name)
+                    return true;
+
+                if (!((__type_name & __arg.__type_name) & _LIBCPP_NONUNIQUE_RTTI_BIT))
+                    return false;
+                return __compare_nonunique_names(__arg) == 0;
+            }
+        }
+        else
+        {
+            pragma(inline, true) extern(D)
+            const(char*) name() const nothrow
+            { return __type_name; }
+
+            pragma(inline, true) extern(D)
+            bool before(const ref type_info __arg) const nothrow
+            { return __type_name < __arg.__type_name; }
+
+            pragma(inline, true) extern(D)
+            size_t hash_code() const nothrow
+            { return cast(size_t) __type_name; }
+
+            pragma(inline, true) extern(D)
+            bool opEquals(const ref type_info __arg) const nothrow
+            { return __type_name == __arg.__type_name; }
+        }
+    }
+
+    class bad_cast : exception
+    {
+    public:
+        this() nothrow;
+        ~this() nothrow {}
+        override const(char)* what() const nothrow;
+    }
+
+    class bad_typeid : exception
+    {
+    public:
+        this() nothrow;
+        ~this() nothrow {}
+        override const(char)* what() const nothrow;
     }
 }
 else
