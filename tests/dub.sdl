@@ -3,12 +3,13 @@ description "Tests for STL containers"
 authors "Manu"
 copyright "Copyright © 2019, Manu"
 license "proprietary"
-dependency "stl-containers" version="~master"
+dependency "stl-containers" path="../"
 targetType "executable"
 mainSourceFile "source/app.d"
 
 // fool appveyor
 configuration "default" {
+  platforms "windows"
   preBuildCommands "cd $PACKAGE_DIR\\cpp && cmake . -G \"Visual Studio 14 2015 Win64\" && cmake --build . --config Debug"
   lflags "/LIBPATH:$PACKAGE_DIR\\cpp\\Debug"
 }
@@ -36,4 +37,3 @@ configuration "posix" {
   libs "stl-container-test-cpp" platform="posix"
   dflags "$PACKAGE_DIR/cpp/libstl-container-test-cpp.a"
 }
-

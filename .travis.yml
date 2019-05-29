@@ -1,20 +1,27 @@
 language: d
 d:
   - dmd
-  - gdc
   - ldc
   - dmd-nightly
   - ldc-latest-ci
   - dmd-beta
   - ldc-beta
 
-matrix:
-  include:
-    - os: windows
-    - os: linux
-      dist: bionic
-    - os: osx
+os:
+  - linux
+  - osx
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export CC=gcc-9;  fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX=g++-9; fi
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-9
 
 script:
-  - cd tests && mkdir -p build && dub test -v
-
+  - cd tests && mkdir -p build
+  - dub test --compiler=${DC} -v
