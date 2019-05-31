@@ -21,12 +21,14 @@ STATUS
 TODO
 -----
 
-* Build *
+Build
+=====
 
 Finish Windows Build and CI - need to install Visual D from command line (@rmanthorpe)
 Write builds for Linux, Android, OSX, FreeBSD
 
-* Implementation *
+Implementation
+==============
 
 1. Key container not implemented at all yet: unordered map
 2. std::string and std:optional complete for Linux and Windows
@@ -34,7 +36,8 @@ Write builds for Linux, Android, OSX, FreeBSD
 4. std::string and std::optional are implemented on Windows and Linux and should be done for Posix, OSX, (BSD?)
 5. std::optional only works for POD due to D unions
 
-* Tests *
+Tests
+=====
 * tests pass only for Windows currently and only on Manu's machine (maybe others, but nobody has checked yet)
 
 
